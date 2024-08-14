@@ -166,7 +166,7 @@
                 }
             };
 
-            console.log('Sending data to webhook:', JSON.stringify(data));
+            console.log('Sending data to webhook:', JSON.stringify(data, null, 2));
             console.log('Webhook URL:', webhookUrl);
 
             try {
@@ -178,13 +178,18 @@
                     body: JSON.stringify(data)
                 });
 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers), null, 2));
+
                 if (response.ok) {
                     const responseText = await response.text();
                     console.log('Response from webhook:', responseText);
-                    alert('Request sent successfully! Check your webhook for the response.');
+                    console.log('Full response object:', response);
+                    alert('Request sent successfully! Check the console for detailed information.');
                 } else {
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
+                    console.error('Full error response object:', response);
                     alert('Failed to send request. Please check the console for details.');
                 }
             } catch (error) {
