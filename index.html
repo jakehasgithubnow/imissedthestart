@@ -151,35 +151,31 @@
 
         summarizeButton.addEventListener('click', () => {
             const missedTime = missedTimeSelect.value;
-            sendDataToWebhook(selectedMovieId, missedTime);
+            async function sendDataToWebhook(imdbId, missedTime) {
+    const webhookUrl = 'https://hook.eu2.make.com/9brirklhq9bqrp51vxdc7lrj7ora60m7';
+    const data = new URLSearchParams();
+    data.append('imdbId', imdbId);
+    data.append('missedTime', missedTime);
+
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: data
         });
 
-        async function sendDataToWebhook(imdbId, missedTime) {
-            const webhookUrl = 'https://hook.eu2.make.com/9brirklhq9bqrp51vxdc7lrj7ora60m7';
-            const data = {
-                imdbId: imdbId,
-                missedTime: missedTime
-            };
-
-            try {
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    alert('Request sent successfully! Check your webhook for the response.');
-                } else {
-                    alert('Failed to send request. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
+        if (response.ok) {
+            alert('Request sent successfully! Check your webhook for the response.');
+        } else {
+            alert('Failed to send request. Please try again.');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+}
     </script>
 </body>
 </html>
