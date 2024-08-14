@@ -154,7 +154,7 @@
             sendDataToWebhook(selectedMovieId, missedTime);
         });
 
-        async function sendDataToWebhook(imdbId, missedTime) {
+        async function sendDataToWebhook(imdbId, missedTime, Runtime, Genre, Director) {
             const baseUrl = 'https://hook.eu2.make.com/ba4va15z1qcj3qds6r8mdrde5s6rnlnd'
             const queryParams = `?test_success=true&source=movie_app`;
             const webhookUrl = `${baseUrl}${queryParams}`;
