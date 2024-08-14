@@ -63,14 +63,14 @@
         });
 
         async function searchMovies(query) {
-            const apiKey = 'b3970299'; // Replace with your actual OMDB API key
-            const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${query}`);
+            const apiKey = 'YOUR_OMDB_API_KEY'; // Replace with your actual OMDB API key
+            const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${query}&type=movie`);
             const data = await response.json();
 
-            if (data.Search) {
+            if (data.Response === "True" && data.Search) {
                 displayResults(data.Search);
             } else {
-                resultsContainer.innerHTML = '<div class="result-item">No results found</div>';
+                resultsContainer.innerHTML = '<div class="result-item">No movies found</div>';
             }
         }
 
