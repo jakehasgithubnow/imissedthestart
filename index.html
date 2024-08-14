@@ -56,6 +56,20 @@
             padding: 5px;
             font-size: 16px;
         }
+        #summarizeButton {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #summarizeButton:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -68,13 +82,16 @@
         <h2>How much did you miss?</h2>
         <select id="missedTimeSelect"></select>
     </div>
+    <button id="summarizeButton">Summarize what I missed</button>
 
     <script>
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('results');
         const missedTimeContainer = document.getElementById('missedTimeContainer');
         const missedTimeSelect = document.getElementById('missedTimeSelect');
+        const summarizeButton = document.getElementById('summarizeButton');
         let timeoutId;
+        let selectedMovieId = '';
 
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutId);
@@ -107,6 +124,7 @@
                 div.classList.add('result-item');
                 div.textContent = `${movie.Title} (${movie.Year})`;
                 div.addEventListener('click', () => {
+                    selectedMovieId = movie.imdbID;
                     searchInput.value = movie.Title;
                     resultsContainer.innerHTML = '';
                     showMissedTimeDropdown();
@@ -117,6 +135,7 @@
 
         function showMissedTimeDropdown() {
             missedTimeContainer.style.display = 'block';
+            summarizeButton.style.display = 'block';
             populateMissedTimeDropdown();
         }
 
@@ -127,6 +146,38 @@
                 option.value = i;
                 option.textContent = `${i} minutes`;
                 missedTimeSelect.appendChild(option);
+            }
+        }
+
+        summarizeButton.addEventListener('click', () => {
+            const missedTime = missedTimeSelect.value;
+            sendDataToWebhook(selectedMovieId, missedTime);
+        });
+
+        async function sendDataToWebhook(imdbId, missedTime) {
+            const webhookUrl = 'https://hook.eu2.make.com/9brirklhq9bqrp51vxdc7lrj7ora60m7';
+            const data = {
+                imdbId: imdbId,
+                missedTime: missedTime
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Request sent successfully! Check your webhook for the response.');
+                } else {
+                    alert('Failed to send request. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
             }
         }
     </script>
