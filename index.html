@@ -155,12 +155,19 @@
         });
 
         async function sendDataToWebhook(imdbId, missedTime) {
-            const webhookUrl = 'https://hook.eu2.make.com/y5ha9afdycwsu7damzce44frgksh5hfw';
+            const baseUrl = 'https://hook.eu2.make.com/y5ha9afdycwsu7damzce44frgksh5hfw';
+            const queryParams = `?test_success=true&source=movie_app`;
+            const webhookUrl = `${baseUrl}${queryParams}`;
+            
             const data = {
-                imdbId: imdbId,
-                missedTime: missedTime,
-                test_success: true
+                payload: {
+                    imdbId: imdbId,
+                    missedTime: missedTime
+                }
             };
+
+            console.log('Sending data to webhook:', JSON.stringify(data));
+            console.log('Webhook URL:', webhookUrl);
 
             try {
                 const response = await fetch(webhookUrl, {
@@ -178,11 +185,11 @@
                 } else {
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
-                    alert('Failed to send request. Please try again.');
+                    alert('Failed to send request. Please check the console for details.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert('An error occurred. Please check the console for details.');
             }
         }
     </script>
