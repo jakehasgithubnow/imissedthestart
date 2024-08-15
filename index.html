@@ -12,9 +12,11 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         h1 {
             font-family: 'Press Start 2P', cursive;
@@ -251,7 +253,7 @@
             summaryContainer.style.display = 'block';
             summaryContainer.innerHTML = `
                 <h2>Summary of what you missed:</h2>
-                <p>${data.summary}</p>
+                <p>${data.summary || 'No summary available.'}</p>
                 ${data.additionalInfo ? `<h3>Additional Information:</h3><p>${data.additionalInfo}</p>` : ''}
             `;
         }
