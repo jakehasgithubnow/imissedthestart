@@ -70,6 +70,20 @@
         #summarizeButton:hover {
             background-color: #45a049;
         }
+        #loadingSpinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -83,6 +97,7 @@
         <select id="missedTimeSelect"></select>
     </div>
     <button id="summarizeButton">Summarize what I missed</button>
+    <div id="loadingSpinner"></div>
 
     <script>
         const searchInput = document.getElementById('searchInput');
@@ -90,6 +105,7 @@
         const missedTimeContainer = document.getElementById('missedTimeContainer');
         const missedTimeSelect = document.getElementById('missedTimeSelect');
         const summarizeButton = document.getElementById('summarizeButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
         let timeoutId;
         let selectedMovieData = null;
 
@@ -182,6 +198,10 @@
             console.log('Webhook URL:', webhookUrl);
 
             try {
+                // Show loading spinner
+                loadingSpinner.style.display = 'block';
+                summarizeButton.disabled = true;
+
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
                     headers: {
@@ -207,6 +227,10 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred. Please check the console for details.');
+            } finally {
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                summarizeButton.disabled = false;
             }
         }
     </script>
