@@ -23,9 +23,10 @@
         h1 {
             color: #333;
         }
-        #loadingMessage {
+        #loadingMessage, #errorMessage {
             text-align: center;
             font-style: italic;
+            color: #ff0000;
         }
         #summaryContent {
             margin-top: 20px;
@@ -36,6 +37,7 @@
     <div class="container">
         <h1>Movie Summary</h1>
         <div id="loadingMessage">Loading summary...</div>
+        <div id="errorMessage"></div>
         <div id="summaryContent"></div>
     </div>
     <script>
@@ -49,13 +51,14 @@
             if (imdbID && missedMinutes) {
                 fetchSummary(imdbID, missedMinutes);
             } else {
-                document.getElementById('loadingMessage').textContent = 'Error: Missing parameters';
+                displayError('Error: Missing IMDB ID or missed minutes parameter');
             }
         });
 
         async function fetchSummary(imdbID, missedMinutes) {
             try {
-                const response = await fetch(`https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__field_2502473__equal=${imdbID}`, {
+                console.log(`Fetching summary for IMDB ID: ${imdbID}, Missed Minutes: ${missedMinutes}`);
+                const response = await fetch(`https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__imdb_id__equal=${imdbID}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Token ${BASEROW_API_TOKEN}`,
@@ -63,63 +66,78 @@
                     }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.results && data.results.length > 0) {
-                        const movie = data.results[0];
-                        displaySummary({
-                            movieTitle: movie['Movie Title'] || 'Unknown Title',
-                            missedMinutes: missedMinutes,
-                            summary: generateSummary(movie, missedMinutes)
-                        });
-                    } else {
-                        throw new Error('Movie not found');
-                    }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (data.results && data.results.length > 0) {
+                    const movie = data.results[0];
+                    console.log('Movie data:', movie);
+                    const summary = generateSummary(movie, missedMinutes);
+                    displaySummary(summary);
                 } else {
-                    throw new Error('Failed to fetch summary');
+                    throw new Error('Movie not found in Baserow');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loadingMessage').textContent = 'Error: Failed to load summary';
+                console.error('Error in fetchSummary:', error);
+                displayError(`Failed to load summary: ${error.message}`);
             }
         }
 
         function generateSummary(movie, missedMinutes) {
+            console.log('Generating summary with:', { movie, missedMinutes });
+            
             if (!movie || typeof movie !== 'object') {
-                console.error('Invalid movie data:', movie);
-                return 'Error: Unable to generate summary due to invalid data.';
+                throw new Error('Invalid movie data received');
             }
 
             const title = movie['Movie Title'] || 'Unknown Movie';
-            const plot = movie['Plot'] || 'No plot available.';
-            const totalMinutes = parseInt(movie['field_2502474'] || '0', 10);
+            const summary = movie['Summary'] || 'No summary available.';
+            const parsedMissedMinutes = parseInt(missedMinutes, 10);
 
-            if (isNaN(totalMinutes) || totalMinutes === 0) {
-                console.warn('Invalid or missing total minutes:', movie['field_2502474']);
-                return `You've missed part of ${title}. Here's what we know: ${plot}`;
+            if (isNaN(parsedMissedMinutes)) {
+                throw new Error('Invalid missed minutes value');
             }
 
-            const missedPercentage = (parseInt(missedMinutes, 10) / totalMinutes) * 100;
-            
-            if (missedPercentage <= 33) {
-                return `You've missed the beginning of ${title}. ${plot.split('.')[0]}.`;
-            } else if (missedPercentage <= 66) {
-                return `You've missed a significant portion of ${title}. ${plot}`;
+            let summaryText;
+            if (parsedMissedMinutes <= 30) {
+                summaryText = `You've missed the beginning of ${title}. ${summary.split('.')[0]}.`;
+            } else if (parsedMissedMinutes <= 60) {
+                summaryText = `You've missed a significant portion of ${title}. ${summary}`;
             } else {
-                return `You've missed most of ${title}. Here's a quick summary: ${plot}`;
+                summaryText = `You've missed most of ${title}. Here's a quick summary: ${summary}`;
             }
+
+            return {
+                title: title,
+                missedMinutes: parsedMissedMinutes,
+                summary: summaryText
+            };
         }
 
         function displaySummary(data) {
+            console.log('Displaying summary:', data);
             const summaryContent = document.getElementById('summaryContent');
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'none';
+            
             summaryContent.innerHTML = `
-                <h2>${data.movieTitle}</h2>
+                <h2>${data.title}</h2>
                 <p><strong>Missed Time:</strong> ${data.missedMinutes} minutes</p>
                 <h3>Summary:</h3>
                 <p>${data.summary}</p>
             `;
+        }
+
+        function displayError(message) {
+            console.error(message);
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'none';
+            errorMessage.textContent = message;
         }
     </script>
 </body>
