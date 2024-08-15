@@ -20,7 +20,7 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1 {
+        h1, h2, h3 {
             color: #333;
         }
         #loadingMessage, #errorMessage {
@@ -102,19 +102,20 @@
                 throw new Error('Invalid missed minutes value');
             }
 
-            let summaryText;
+            let contextText;
             if (parsedMissedMinutes <= 30) {
-                summaryText = `You've missed the beginning of ${title}. ${summary.split('.')[0]}.`;
+                contextText = `You've missed the beginning of ${title}. Here's what you need to know:`;
             } else if (parsedMissedMinutes <= 60) {
-                summaryText = `You've missed a significant portion of ${title}. ${summary}`;
+                contextText = `You've missed a significant portion of ${title}. Here's a summary to catch you up:`;
             } else {
-                summaryText = `You've missed most of ${title}. Here's a quick summary: ${summary}`;
+                contextText = `You've missed most of ${title}. Here's a comprehensive summary:`;
             }
 
             return {
                 title: title,
                 missedMinutes: parsedMissedMinutes,
-                summary: summaryText
+                context: contextText,
+                summary: summary
             };
         }
 
@@ -128,6 +129,7 @@
                 <h2>${data.title}</h2>
                 <p><strong>Missed Time:</strong> ${data.missedMinutes} minutes</p>
                 <h3>Summary:</h3>
+                <p>${data.context}</p>
                 <p>${data.summary}</p>
             `;
         }
