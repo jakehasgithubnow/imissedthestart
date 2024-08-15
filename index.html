@@ -84,6 +84,16 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        #summaryContainer {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-width: 600px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -98,6 +108,7 @@
     </div>
     <button id="summarizeButton">Summarize what I missed</button>
     <div id="loadingSpinner"></div>
+    <div id="summaryContainer"></div>
 
     <script>
         const searchInput = document.getElementById('searchInput');
@@ -106,6 +117,7 @@
         const missedTimeSelect = document.getElementById('missedTimeSelect');
         const summarizeButton = document.getElementById('summarizeButton');
         const loadingSpinner = document.getElementById('loadingSpinner');
+        const summaryContainer = document.getElementById('summaryContainer');
         let timeoutId;
         let selectedMovieData = null;
 
@@ -164,6 +176,7 @@
         function showMissedTimeDropdown() {
             missedTimeContainer.style.display = 'block';
             summarizeButton.style.display = 'block';
+            summaryContainer.style.display = 'none';
             populateMissedTimeDropdown();
         }
 
@@ -201,6 +214,7 @@
                 // Show loading spinner
                 loadingSpinner.style.display = 'block';
                 summarizeButton.disabled = true;
+                summaryContainer.style.display = 'none';
 
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
@@ -214,10 +228,9 @@
                 console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers), null, 2));
 
                 if (response.ok) {
-                    const responseText = await response.text();
-                    console.log('Response from webhook:', responseText);
-                    console.log('Full response object:', response);
-                    alert('Request sent successfully! Check the console for detailed information.');
+                    const responseData = await response.json();
+                    console.log('Response from webhook:', responseData);
+                    displaySummary(responseData);
                 } else {
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
@@ -232,6 +245,15 @@
                 loadingSpinner.style.display = 'none';
                 summarizeButton.disabled = false;
             }
+        }
+
+        function displaySummary(data) {
+            summaryContainer.style.display = 'block';
+            summaryContainer.innerHTML = `
+                <h2>Summary of what you missed:</h2>
+                <p>${data.summary}</p>
+                ${data.additionalInfo ? `<h3>Additional Information:</h3><p>${data.additionalInfo}</p>` : ''}
+            `;
         }
     </script>
 </body>
