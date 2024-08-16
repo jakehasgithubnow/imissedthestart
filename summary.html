@@ -89,10 +89,7 @@
                 console.log('Full API Response:', JSON.stringify(data, null, 2));
 
                 if (data.results && data.results.length > 0) {
-                    const fullMovieData = {
-                        ...movieData,
-                        ...data.results[0]
-                    };
+                    const fullMovieData = data.results[0];  // Use only the API response data
                     console.log('Full Movie Data:', fullMovieData);
                     displaySummary(fullMovieData);
                 } else {
@@ -111,20 +108,20 @@
             const debugInfo = document.getElementById('debugInfo');
             loadingMessage.style.display = 'none';
 
+            const posterUrl = movieData.poster || '/api/placeholder/300/450';
+
             // Debug information
             debugInfo.innerHTML = `
-                <p>Poster URL: ${movieData.poster || 'Not found'}</p>
-                <p>Title: ${movieData.title || movieData.Title || 'Not found'}</p>
-                <p>Year: ${movieData.year || movieData.Year || 'Not found'}</p>
+                <p>Poster URL: ${posterUrl}</p>
+                <p>Title: ${movieData.title || 'Not found'}</p>
+                <p>Year: ${movieData.year || 'Not found'}</p>
             `;
 
             const htmlSummary = marked(movieData.Summary || 'No summary available.');
-
-            const posterUrl = movieData.poster || '/api/placeholder/300/450';
             
             summaryContent.innerHTML = `
-                <h2>${movieData.title || movieData.Title || 'Unknown Title'} (${movieData.year || movieData.Year || 'Unknown Year'})</h2>
-                <img src="${posterUrl}" alt="${movieData.title || movieData.Title || 'Movie'} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <h2>${movieData.title || 'Unknown Title'} (${movieData.year || 'Unknown Year'})</h2>
+                <img src="${posterUrl}" alt="${movieData.title || 'Movie'} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
                 <div class="summary">${htmlSummary}</div>
             `;
 
