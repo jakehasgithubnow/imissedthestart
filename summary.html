@@ -52,30 +52,12 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const movieData = {
-                imdbID: urlParams.get('imdbID'),
-                missedMinutes: urlParams.get('missedMinutes'),
-                title: urlParams.get('title'),
-                year: urlParams.get('year'),
-                rated: urlParams.get('rated'),
-                runtime: urlParams.get('runtime'),
-                genre: urlParams.get('genre'),
-                director: urlParams.get('director'),
-                writer: urlParams.get('writer'),
-                actors: urlParams.get('actors'),
-                language: urlParams.get('language'),
-                country: urlParams.get('country'),
-                awards: urlParams.get('awards'),
-                poster: urlParams.get('poster'),
-                metascore: urlParams.get('metascore'),
-                imdbrating: urlParams.get('imdbrating'),
-                type: urlParams.get('type')
-            };
-
+            const movieData = Object.fromEntries(urlParams);
+            
             if (movieData.imdbID && movieData.missedMinutes) {
                 fetchSummary(movieData);
             } else {
-                displayError('Error: Missing IMDB ID or missed minutes parameter');
+                displayError('Error: Missing IMDB ID or missed minutes');
             }
         });
 
@@ -118,29 +100,29 @@
             let contextText;
             const parsedMissedMinutes = parseInt(movieData.missedMinutes, 10);
             if (parsedMissedMinutes <= 30) {
-                contextText = `You've missed the beginning of ${movieData.title}. Here's what you need to know:`;
+                contextText = `You've missed the beginning of ${movieData.title || movieData.Title}. Here's what you need to know:`;
             } else if (parsedMissedMinutes <= 60) {
-                contextText = `You've missed a significant portion of ${movieData.title}. Here's a summary to catch you up:`;
+                contextText = `You've missed a significant portion of ${movieData.title || movieData.Title}. Here's a summary to catch you up:`;
             } else {
-                contextText = `You've missed most of ${movieData.title}. Here's a comprehensive summary:`;
+                contextText = `You've missed most of ${movieData.title || movieData.Title}. Here's a comprehensive summary:`;
             }
 
             summaryContent.innerHTML = `
-                <h2>${movieData.title} (${movieData.year})</h2>
-                <img src="${movieData.poster}" alt="${movieData.title} Poster" class="poster">
+                <h2>${movieData.title || movieData.Title} (${movieData.year || movieData.Year})</h2>
+                <img src="${movieData.poster || movieData.Poster}" alt="${movieData.title || movieData.Title} Poster" class="poster">
                 <p><strong>Missed Time:</strong> ${movieData.missedMinutes} minutes</p>
-                <p><strong>Rated:</strong> ${movieData.rated}</p>
-                <p><strong>Runtime:</strong> ${movieData.runtime}</p>
-                <p><strong>Genre:</strong> ${movieData.genre}</p>
-                <p><strong>Director:</strong> ${movieData.director}</p>
-                <p><strong>Writer:</strong> ${movieData.writer}</p>
-                <p><strong>Actors:</strong> ${movieData.actors}</p>
-                <p><strong>Language:</strong> ${movieData.language}</p>
-                <p><strong>Country:</strong> ${movieData.country}</p>
-                <p><strong>Awards:</strong> ${movieData.awards}</p>
-                <p><strong>Metascore:</strong> ${movieData.metascore}</p>
-                <p><strong>IMDB Rating:</strong> ${movieData.imdbrating}</p>
-                <p><strong>Type:</strong> ${movieData.type}</p>
+                <p><strong>Rated:</strong> ${movieData.rated || movieData.Rated}</p>
+                <p><strong>Runtime:</strong> ${movieData.runtime || movieData.Runtime}</p>
+                <p><strong>Genre:</strong> ${movieData.genre || movieData.Genre}</p>
+                <p><strong>Director:</strong> ${movieData.director || movieData.Director}</p>
+                <p><strong>Writer:</strong> ${movieData.writer || movieData.Writer}</p>
+                <p><strong>Actors:</strong> ${movieData.actors || movieData.Actors}</p>
+                <p><strong>Language:</strong> ${movieData.language || movieData.Language}</p>
+                <p><strong>Country:</strong> ${movieData.country || movieData.Country}</p>
+                <p><strong>Awards:</strong> ${movieData.awards || movieData.Awards}</p>
+                <p><strong>Metascore:</strong> ${movieData.metascore || movieData.Metascore}</p>
+                <p><strong>IMDB Rating:</strong> ${movieData.imdbrating || movieData.imdbRating}</p>
+                <p><strong>Type:</strong> ${movieData.type || movieData.Type}</p>
                 <h3>Summary:</h3>
                 <p>${contextText}</p>
                 <p>${summary}</p>
