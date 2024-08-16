@@ -64,7 +64,7 @@
         async function fetchSummary(movieData) {
             try {
                 console.log(`Fetching summary for IMDB ID: ${movieData.imdbID}, Missed Minutes: ${movieData.missedMinutes}`);
-                const response = await fetch(`https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__imdb_id__equal=${movieData.imdbID}`, {
+                const response = await fetch(`https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__field_2502473__equal=${movieData.imdbID}&filter__field_2502474__equal=${movieData.missedMinutes}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Token ${BASEROW_API_TOKEN}`,
@@ -83,7 +83,7 @@
                     const summary = data.results[0]['Summary'] || 'No summary available.';
                     displaySummary(movieData, summary);
                 } else {
-                    throw new Error('Movie not found in Baserow');
+                    throw new Error('Movie not found in Baserow with matching IMDB ID and missed minutes');
                 }
             } catch (error) {
                 console.error('Error in fetchSummary:', error);
