@@ -24,7 +24,7 @@
         h1, h2, h3, h4, h5, h6 {
             color: #333;
         }
-        #loadingMessage, #errorMessage, #debugInfo {
+        #loadingMessage, #errorMessage {
             text-align: center;
             font-style: italic;
             color: #ff0000;
@@ -47,30 +47,36 @@
     <div class="container">
         <div id="loadingMessage">Loading summary...</div>
         <div id="errorMessage"></div>
-        <div id="debugInfo"></div>
         <div id="summaryContent"></div>
     </div>
     <script>
-        const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
-        const TABLE_ID = '339118';
-        const IMDB_ID_FIELD = 'field_2502473';
-        const MISSED_MINUTES_FIELD = 'field_2502474';
-
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const movieData = Object.fromEntries(urlParams);
+            const imdbID = urlParams.get('imdbID');
+            const missedMinutes = urlParams.get('missedMinutes');
             
-            if (movieData.imdbID && movieData.missedMinutes) {
-                fetchSummary(movieData);
+            // Retrieve full movie data from session storage
+            const movieData = JSON.parse(sessionStorage.getItem('movieData'));
+            
+            if (movieData && movieData.imdbID === imdbID) {
+                fetchSummary(movieData, missedMinutes);
             } else {
-                displayError('Error: Missing IMDB ID or missed minutes');
+                console.error('Movie data not found in session storage or mismatch in imdbID');
+                displayError('Error: Movie data not found. Please try searching again.');
             }
         });
 
-        async function fetchSummary(movieData) {
+        async function fetchSummary(movieData, missedMinutes) {
             try {
-                console.log(`Fetching summary for IMDB ID: ${movieData.imdbID}, Missed Minutes: ${movieData.missedMinutes}`);
-                const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__${IMDB_ID_FIELD}__equal=${movieData.imdbID}&filter__${MISSED_MINUTES_FIELD}__equal=${movieData.missedMinutes}`;
+                console.log('Movie Data:', movieData);
+                console.log('Missed Minutes:', missedMinutes);
+
+                const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
+                const TABLE_ID = '339118';
+                const IMDB_ID_FIELD = 'field_2502473';
+                const MISSED_MINUTES_FIELD = 'field_2502474';
+
+                const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__${IMDB_ID_FIELD}__equal=${movieData.imdbID}&filter__${MISSED_MINUTES_FIELD}__equal=${missedMinutes}`;
                 console.log('API URL:', url);
 
                 const response = await fetch(url, {
@@ -89,11 +95,10 @@
                 console.log('Full API Response:', JSON.stringify(data, null, 2));
 
                 if (data.results && data.results.length > 0) {
-                    const fullMovieData = data.results[0];  // Use only the API response data
-                    console.log('Full Movie Data:', fullMovieData);
-                    displaySummary(fullMovieData);
+                    const summaryData = data.results[0];
+                    displaySummary(movieData, summaryData);
                 } else {
-                    throw new Error('Movie not found in Baserow with matching IMDB ID and missed minutes');
+                    throw new Error('Summary not found in Baserow with matching IMDB ID and missed minutes');
                 }
             } catch (error) {
                 console.error('Error in fetchSummary:', error);
@@ -101,27 +106,19 @@
             }
         }
 
-        function displaySummary(movieData) {
+        function displaySummary(movieData, summaryData) {
             console.log('Displaying summary for:', movieData);
+            console.log('Summary data:', summaryData);
             const summaryContent = document.getElementById('summaryContent');
             const loadingMessage = document.getElementById('loadingMessage');
-            const debugInfo = document.getElementById('debugInfo');
             loadingMessage.style.display = 'none';
 
-            const posterUrl = movieData.poster || '/api/placeholder/300/450';
-
-            // Debug information
-            debugInfo.innerHTML = `
-                <p>Poster URL: ${posterUrl}</p>
-                <p>Title: ${movieData.title || 'Not found'}</p>
-                <p>Year: ${movieData.year || 'Not found'}</p>
-            `;
-
-            const htmlSummary = marked(movieData.Summary || 'No summary available.');
+            const posterUrl = movieData.Poster || '/api/placeholder/300/450';
+            const htmlSummary = marked(summaryData.Summary || 'No summary available.');
             
             summaryContent.innerHTML = `
-                <h2>${movieData.title || 'Unknown Title'} (${movieData.year || 'Unknown Year'})</h2>
-                <img src="${posterUrl}" alt="${movieData.title || 'Movie'} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <h2>${movieData.Title} (${movieData.Year})</h2>
+                <img src="${posterUrl}" alt="${movieData.Title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
                 <div class="summary">${htmlSummary}</div>
             `;
 
