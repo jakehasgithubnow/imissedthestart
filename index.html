@@ -191,8 +191,25 @@
             
             const data = {
                 payload: {
-                    ...movieData,
-                    missedTime: missedTime
+                    imdbID: movieData.imdbID,
+                    missedMinutes: missedTime,
+                    Title: movieData.Title,
+                    Year: movieData.Year,
+                    Rated: movieData.Rated,
+                    Runtime: movieData.Runtime,
+                    Genre: movieData.Genre,
+                    Director: movieData.Director,
+                    Writer: movieData.Writer,
+                    Actors: movieData.Actors,
+                    Plot: movieData.Plot,
+                    Language: movieData.Language,
+                    Country: movieData.Country,
+                    Awards: movieData.Awards,
+                    Poster: movieData.Poster,
+                    Metascore: movieData.Metascore,
+                    imdbRating: movieData.imdbRating,
+                    imdbVotes: movieData.imdbVotes,
+                    Type: movieData.Type
                 }
             };
 
@@ -220,8 +237,11 @@
                     console.log('Response from webhook:', responseData);
                     
                     // Redirect to the summary page with URL parameters
-                    const summaryPageUrl = `summary.html?imdbID=${responseData.imdbID}&missedMinutes=${responseData.missedMinutes}`;
-                    window.location.href = summaryPageUrl;
+                    const summaryPageUrl = new URL('summary.html', window.location.href);
+                    Object.entries(data.payload).forEach(([key, value]) => {
+                        summaryPageUrl.searchParams.append(key, encodeURIComponent(value));
+                    });
+                    window.location.href = summaryPageUrl.toString();
                 } else {
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
