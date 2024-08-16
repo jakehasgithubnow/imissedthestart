@@ -20,7 +20,7 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1, h2, h3 {
+        h1, h2 {
             color: #333;
         }
         #loadingMessage, #errorMessage {
@@ -35,7 +35,7 @@
             max-width: 300px;
             height: auto;
             display: block;
-            margin: 20px 0;
+            margin: 20px auto;
         }
     </style>
 </head>
@@ -85,8 +85,12 @@
                 console.log('Full API Response:', JSON.stringify(data, null, 2));
 
                 if (data.results && data.results.length > 0) {
-                    const summary = data.results[0]['Summary'] || 'No summary available.';
-                    displaySummary(movieData, summary);
+                    const fullMovieData = {
+                        ...movieData,
+                        ...data.results[0]
+                    };
+                    console.log('Full Movie Data:', fullMovieData);
+                    displaySummary(fullMovieData);
                 } else {
                     throw new Error('Movie not found in Baserow with matching IMDB ID and missed minutes');
                 }
@@ -96,41 +100,16 @@
             }
         }
 
-        function displaySummary(movieData, summary) {
-            console.log('Displaying summary:', movieData);
+        function displaySummary(movieData) {
+            console.log('Displaying summary for:', movieData);
             const summaryContent = document.getElementById('summaryContent');
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'none';
-            
-            let contextText;
-            const parsedMissedMinutes = parseInt(movieData.missedMinutes, 10);
-            if (parsedMissedMinutes <= 30) {
-                contextText = `You've missed the beginning of ${movieData.title || movieData.Title}. Here's what you need to know:`;
-            } else if (parsedMissedMinutes <= 60) {
-                contextText = `You've missed a significant portion of ${movieData.title || movieData.Title}. Here's a summary to catch you up:`;
-            } else {
-                contextText = `You've missed most of ${movieData.title || movieData.Title}. Here's a comprehensive summary:`;
-            }
 
             summaryContent.innerHTML = `
                 <h2>${movieData.title || movieData.Title} (${movieData.year || movieData.Year})</h2>
                 <img src="${movieData.poster || movieData.Poster}" alt="${movieData.title || movieData.Title} Poster" class="poster">
-                <p><strong>Missed Time:</strong> ${movieData.missedMinutes} minutes</p>
-                <p><strong>Rated:</strong> ${movieData.rated || movieData.Rated}</p>
-                <p><strong>Runtime:</strong> ${movieData.runtime || movieData.Runtime}</p>
-                <p><strong>Genre:</strong> ${movieData.genre || movieData.Genre}</p>
-                <p><strong>Director:</strong> ${movieData.director || movieData.Director}</p>
-                <p><strong>Writer:</strong> ${movieData.writer || movieData.Writer}</p>
-                <p><strong>Actors:</strong> ${movieData.actors || movieData.Actors}</p>
-                <p><strong>Language:</strong> ${movieData.language || movieData.Language}</p>
-                <p><strong>Country:</strong> ${movieData.country || movieData.Country}</p>
-                <p><strong>Awards:</strong> ${movieData.awards || movieData.Awards}</p>
-                <p><strong>Metascore:</strong> ${movieData.metascore || movieData.Metascore}</p>
-                <p><strong>IMDB Rating:</strong> ${movieData.imdbrating || movieData.imdbRating}</p>
-                <p><strong>Type:</strong> ${movieData.type || movieData.Type}</p>
-                <h3>Summary:</h3>
-                <p>${contextText}</p>
-                <p>${summary}</p>
+                <p>${movieData.Summary || 'No summary available.'}</p>
             `;
         }
 
