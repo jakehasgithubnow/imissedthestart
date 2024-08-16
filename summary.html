@@ -24,7 +24,7 @@
         h1, h2, h3, h4, h5, h6 {
             color: #333;
         }
-        #loadingMessage, #errorMessage {
+        #loadingMessage, #errorMessage, #debugInfo {
             text-align: center;
             font-style: italic;
             color: #ff0000;
@@ -47,6 +47,7 @@
     <div class="container">
         <div id="loadingMessage">Loading summary...</div>
         <div id="errorMessage"></div>
+        <div id="debugInfo"></div>
         <div id="summaryContent"></div>
     </div>
     <script>
@@ -107,15 +108,30 @@
             console.log('Displaying summary for:', movieData);
             const summaryContent = document.getElementById('summaryContent');
             const loadingMessage = document.getElementById('loadingMessage');
+            const debugInfo = document.getElementById('debugInfo');
             loadingMessage.style.display = 'none';
+
+            // Debug information
+            debugInfo.innerHTML = `
+                <p>Poster URL: ${movieData.poster || 'Not found'}</p>
+                <p>Title: ${movieData.title || movieData.Title || 'Not found'}</p>
+                <p>Year: ${movieData.year || movieData.Year || 'Not found'}</p>
+            `;
 
             const htmlSummary = marked(movieData.Summary || 'No summary available.');
 
+            const posterUrl = movieData.poster || '/api/placeholder/300/450';
+            
             summaryContent.innerHTML = `
-                <h2>${movieData.title || movieData.Title} (${movieData.year || movieData.Year})</h2>
-                <img src="${movieData.poster}" alt="${movieData.title || movieData.Title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <h2>${movieData.title || movieData.Title || 'Unknown Title'} (${movieData.year || movieData.Year || 'Unknown Year'})</h2>
+                <img src="${posterUrl}" alt="${movieData.title || movieData.Title || 'Movie'} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
                 <div class="summary">${htmlSummary}</div>
             `;
+
+            // Additional check for image loading
+            const posterImg = summaryContent.querySelector('.poster');
+            posterImg.addEventListener('load', () => console.log('Poster image loaded successfully'));
+            posterImg.addEventListener('error', () => console.error('Failed to load poster image'));
         }
 
         function displayError(message) {
