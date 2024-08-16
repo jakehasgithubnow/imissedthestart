@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Summary</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +21,7 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1, h2 {
+        h1, h2, h3, h4, h5, h6 {
             color: #333;
         }
         #loadingMessage, #errorMessage {
@@ -36,6 +37,9 @@
             height: auto;
             display: block;
             margin: 20px auto;
+        }
+        .summary {
+            text-align: justify;
         }
     </style>
 </head>
@@ -105,10 +109,12 @@
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'none';
 
+            const htmlSummary = marked(movieData.Summary || 'No summary available.');
+
             summaryContent.innerHTML = `
                 <h2>${movieData.title || movieData.Title} (${movieData.year || movieData.Year})</h2>
-                <img src="${movieData.poster || movieData.Poster}" alt="${movieData.title || movieData.Title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
-                <p>${movieData.Summary || 'No summary available.'}</p>
+                <img src="${movieData.poster}" alt="${movieData.title || movieData.Title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <div class="summary">${htmlSummary}</div>
             `;
         }
 
