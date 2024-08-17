@@ -3,123 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>What are you watching?</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Movie Summary</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            line-height: 1.6;
             margin: 0;
-            background-color: #F4BE1E;
             padding: 20px;
-            box-sizing: border-box;
+            background-color: #f4f4f4;
         }
-        .logo {
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #333;
+        }
+        #loadingMessage, #errorMessage {
+            text-align: center;
+            font-style: italic;
+            color: #ff0000;
+        }
+        #summaryContent {
+            margin-top: 20px;
+        }
+        .poster {
             max-width: 300px;
-            margin-bottom: 20px;
+            height: auto;
+            display: block;
+            margin: 20px auto;
         }
-        h1, h2, #summarizeButton {
-            font-family: 'Press Start 2P', cursive;
-            color: #4a4a4a;
-            text-align: center;
-        }
-        .search-container {
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
-        }
-        #searchInput {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            border-radius: 25px;
-            border: 2px solid #4a4a4a;
-            outline: none;
-        }
-        #results {
-            margin-top: 10px;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .result-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-        .result-item:hover {
-            background-color: #f0f0f0;
-        }
-        #missedTimeContainer {
-            display: none;
-            margin-top: 20px;
-            text-align: center;
-        }
-        #missedTimeSelect {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 15px;
-        }
-        #summarizeButton {
-            display: none;
-            margin-top: 20px;
-            padding: 15px 30px;
-            font-size: 16px;
-            background-color: #D62A2A;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        #summarizeButton:hover {
-            background-color: #B52323;
-        }
-        #loadingSpinner {
-            display: none;
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-top: 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #errorMessage {
-            color: red;
-            margin-top: 20px;
-            text-align: center;
+        .summary {
+            text-align: justify;
         }
     </style>
 </head>
 <body>
-    <img src="logo.png" alt="I missed The start" class="logo">
-    <h1>What are you watching?</h1>
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search for a movie...">
-        <div id="results"></div>
+    <div class="container">
+        <div id="loadingMessage">Loading summary...</div>
+        <div id="errorMessage"></div>
+        <div id="summaryContent"></div>
     </div>
-    <div id="missedTimeContainer">
-        <h2>How much did you miss?</h2>
-        <select id="missedTimeSelect"></select>
-    </div>
-    <button id="summarizeButton">Summarize what I missed</button>
-    <div id="loadingSpinner"></div>
-    <div id="errorMessage"></div>
-
     <script>
-        // The JavaScript remains unchanged
-        // ... (insert the entire JavaScript code here)
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const imdbID = urlParams.get('imdbID');
+            const missedMinutes = urlParams.get('missedMinutes');
+            
+            // Retrieve full movie data from session storage
+            const movieData = JSON.parse(sessionStorage.getItem('movieData'));
+            
+            if (movieData && movieData.imdbID === imdbID) {
+                fetchSummary(movieData, missedMinutes);
+            } else {
+                console.error('Movie data not found in session storage or mismatch in imdbID');
+                displayError('Error: Movie data not found. Please try searching again.');
+            }
+        });
+
+        async function fetchSummary(movieData, missedMinutes) {
+            try {
+                console.log('Movie Data:', movieData);
+                console.log('Missed Minutes:', missedMinutes);
+
+                const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
+                const TABLE_ID = '339118';
+                const IMDB_ID_FIELD = 'field_2502473';
+                const MISSED_MINUTES_FIELD = 'field_2502474';
+
+                const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__${IMDB_ID_FIELD}__equal=${movieData.imdbID}&filter__${MISSED_MINUTES_FIELD}__equal=${missedMinutes}`;
+                console.log('API URL:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${BASEROW_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Full API Response:', JSON.stringify(data, null, 2));
+
+                if (data.results && data.results.length > 0) {
+                    const summaryData = data.results[0];
+                    displaySummary(movieData, summaryData);
+                } else {
+                    throw new Error('Summary not found in Baserow with matching IMDB ID and missed minutes');
+                }
+            } catch (error) {
+                console.error('Error in fetchSummary:', error);
+                displayError(`Failed to load summary: ${error.message}`);
+            }
+        }
+
+        function displaySummary(movieData, summaryData) {
+            console.log('Displaying summary for:', movieData);
+            console.log('Summary data:', summaryData);
+            const summaryContent = document.getElementById('summaryContent');
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'none';
+
+            const posterUrl = movieData.Poster || '/api/placeholder/300/450';
+            const htmlSummary = marked(summaryData.Summary || 'No summary available.');
+            
+            summaryContent.innerHTML = `
+                <h2>${movieData.Title} (${movieData.Year})</h2>
+                <img src="${posterUrl}" alt="${movieData.Title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <div class="summary">${htmlSummary}</div>
+            `;
+
+            // Additional check for image loading
+            const posterImg = summaryContent.querySelector('.poster');
+            posterImg.addEventListener('load', () => console.log('Poster image loaded successfully'));
+            posterImg.addEventListener('error', () => console.error('Failed to load poster image'));
+        }
+
+        function displayError(message) {
+            console.error(message);
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'none';
+            errorMessage.textContent = message;
+        }
     </script>
 </body>
 </html>
