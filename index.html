@@ -41,7 +41,7 @@
             max-width: 400px;
             margin-bottom: 20px;
         }
-        #searchInput {
+        #searchInput, #missedTimeSelect {
             width: 100%;
             padding: 15px;
             font-size: 16px;
@@ -73,14 +73,6 @@
             text-align: center;
             width: 100%;
             max-width: 400px;
-        }
-        #missedTimeSelect {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 15px;
-            width: 100%;
-            max-width: 200px;
         }
         #summarizeButton {
             display: none;
@@ -116,6 +108,11 @@
             margin-top: 20px;
             text-align: center;
         }
+        .description {
+            text-align: center;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -139,6 +136,7 @@
         <input type="text" id="searchInput" placeholder="Search for a movie...">
         <div id="results"></div>
     </div>
+    <p class="description">Missed the start of a movie or TV show? No problem. Tell us what you're watching and how much you've missed. We'll generate a short summary so you can jump right in.</p>
     <div id="missedTimeContainer">
         <h2>How much did you miss?</h2>
         <select id="missedTimeSelect"></select>
@@ -228,7 +226,7 @@
 
         function populateMissedTimeDropdown() {
             missedTimeSelect.innerHTML = '';
-            for (let i = 5; i <= 120; i += 5) {
+            for (let i = 5; i <= 60; i += 5) {
                 const option = document.createElement('option');
                 option.value = i;
                 option.textContent = `${i} minutes`;
