@@ -6,7 +6,100 @@
     <title>What are you watching?</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        /* ... (CSS remains the same) ... */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #F4BE1E;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .logo {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        h1, h2, #summarizeButton {
+            font-family: 'Press Start 2P', cursive;
+            color: #4a4a4a;
+            text-align: center;
+        }
+        .search-container {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 25px;
+            border: 2px solid #4a4a4a;
+            outline: none;
+        }
+        #results {
+            margin-top: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .result-item:hover {
+            background-color: #f0f0f0;
+        }
+        #missedTimeContainer {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #missedTimeSelect {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 15px;
+        }
+        #summarizeButton {
+            display: none;
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #D62A2A;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #summarizeButton:hover {
+            background-color: #B52323;
+        }
+        #loadingSpinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #errorMessage {
+            color: red;
+            margin-top: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
