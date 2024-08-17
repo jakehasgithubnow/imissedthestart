@@ -5,29 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Summary</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
+            background-color: #F4BE1E;
             padding: 20px;
-            background-color: #f4f4f4;
+            box-sizing: border-box;
         }
         .container {
+            width: 100%;
             max-width: 800px;
-            margin: auto;
             background: white;
             padding: 20px;
-            border-radius: 5px;
+            border-radius: 25px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+        .logo {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
         h1, h2, h3, h4, h5, h6 {
-            color: #333;
+            font-family: 'Press Start 2P', cursive;
+            color: #4a4a4a;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 18px;
         }
         #loadingMessage, #errorMessage {
             text-align: center;
             font-style: italic;
-            color: #ff0000;
+            color: #D62A2A;
+            font-family: 'Press Start 2P', cursive;
         }
         #summaryContent {
             margin-top: 20px;
@@ -37,14 +59,30 @@
             height: auto;
             display: block;
             margin: 20px auto;
+            border-radius: 15px;
         }
         .summary {
             text-align: justify;
+            font-family: Arial, sans-serif;
+            color: #4a4a4a;
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            h2 {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <img src="logo.png" alt="I missed The start" class="logo">
     <div class="container">
+        <h1>Movie Summary</h1>
         <div id="loadingMessage">Loading summary...</div>
         <div id="errorMessage"></div>
         <div id="summaryContent"></div>
