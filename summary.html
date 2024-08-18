@@ -34,6 +34,7 @@
             padding: 20px;
             border-radius: 25px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
         .logo {
             max-width: 300px;
@@ -52,6 +53,10 @@
         }
         h2 {
             font-size: 18px;
+        }
+        h3 {
+            font-size: 14px;
+            margin: 0;
         }
         #loadingMessage, #errorMessage {
             text-align: center;
@@ -74,6 +79,20 @@
             font-family: Arial, sans-serif;
             color: #4a4a4a;
         }
+        .reddit-link {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+        }
+        .reddit-link a {
+            color: #4a4a4a;
+            text-decoration: none;
+        }
+        .reddit-link a:hover {
+            text-decoration: underline;
+        }
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -83,6 +102,9 @@
             }
             h2 {
                 font-size: 16px;
+            }
+            h3 {
+                font-size: 12px;
             }
         }
     </style>
@@ -94,6 +116,9 @@
         <div id="loadingMessage">Loading summary...</div>
         <div id="errorMessage"></div>
         <div id="summaryContent"></div>
+    </div>
+    <div class="reddit-link">
+        <h3><a href="https://www.reddit.com/r/SideProject/comments/1ev428t/missed_the_start_of_a_movie_i_made_a_tool_that/" target="_blank">Useful? Fun? Make my day with an upvote on Reddit.</a></h3>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
