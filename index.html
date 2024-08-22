@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
     <script type='text/javascript'>
-  window.smartlook||(function(d) {
-    var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
-    var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
-    c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
-    })(document);
-    smartlook('init', 'ff7c704fd4470721b53a4983d320d9b84a9dcf37', { region: 'eu' });
-</script>
+    window.smartlook||(function(d) {
+        var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
+        var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
+        c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
+        })(document);
+        smartlook('init', 'ff7c704fd4470721b53a4983d320d9b84a9dcf37', { region: 'eu' });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What are you watching?</title>
@@ -192,6 +192,8 @@
         let timeoutId;
         let selectedMovieData = null;
 
+        const baserowApiKey = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
+
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
@@ -270,9 +272,59 @@
             }
         }
 
-        summarizeButton.addEventListener('click', () => {
+        async function checkExistingSummary(imdbID, missedMinutes) {
+            const tableId = '339118';
+            const url = `https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true&filter__imdb_id__equal=${imdbID}&filter__missed_minutes__equal=${missedMinutes}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${baserowApiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch from Baserow');
+                }
+
+                const data = await response.json();
+                return data.count > 0 ? data.results[0] : null;
+            } catch (error) {
+                console.error('Error checking Baserow:', error);
+                return null;
+            }
+        }
+
+        summarizeButton.addEventListener('click', async () => {
             const missedTime = missedTimeSelect.value;
-            sendDataToWebhook(selectedMovieData, missedTime);
+            const imdbID = selectedMovieData.imdbID;
+
+            showLoadingAnimation();
+            summarizeButton.disabled = true;
+            errorMessage.textContent = '';
+
+            try {
+                const existingSummary = await checkExistingSummary(imdbID, missedTime);
+
+                if (existingSummary) {
+                    // Summary exists, redirect to summary page
+                    const summaryPageUrl = new URL('summary.html', window.location.href);
+                    summaryPageUrl.searchParams.append('imdbID', imdbID);
+                    summaryPageUrl.searchParams.append('missedMinutes', missedTime);
+                    window.location.href = summaryPageUrl.toString();
+                } else {
+                    // No existing summary, proceed with Make.com webhook
+                    await sendDataToWebhook(selectedMovieData, missedTime);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+            } finally {
+                hideLoadingAnimation();
+                summarizeButton.disabled = false;
+            }
         });
 
         async function sendDataToWebhook(movieData, missedTime) {
@@ -304,14 +356,7 @@
                 }
             };
 
-            console.log('Sending data to webhook:', JSON.stringify(data, null, 2));
-            console.log('Webhook URL:', webhookUrl);
-
             try {
-                showLoadingAnimation();
-                summarizeButton.disabled = true;
-                errorMessage.textContent = '';
-
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
                     headers: {
@@ -320,12 +365,8 @@
                     body: JSON.stringify(data)
                 });
 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers), null, 2));
-
                 if (response.ok) {
                     const responseData = await response.json();
-                    console.log('Response from webhook:', responseData);
                     
                     // Store movie data in session storage
                     sessionStorage.setItem('movieData', JSON.stringify(data.payload));
@@ -334,20 +375,13 @@
                     const summaryPageUrl = new URL('summary.html', window.location.href);
                     summaryPageUrl.searchParams.append('imdbID', data.payload.imdbID);
                     summaryPageUrl.searchParams.append('missedMinutes', data.payload.missedMinutes);
-                    console.log('Redirecting to:', summaryPageUrl.toString());
                     window.location.href = summaryPageUrl.toString();
                 } else {
-                    const errorText = await response.text();
-                    console.error('Error response:', errorText);
-                    console.error('Full error response object:', response);
                     throw new Error('Failed to send request to webhook');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
-            } finally {
-                hideLoadingAnimation();
-                summarizeButton.disabled = false;
             }
         }
         
@@ -362,22 +396,3 @@
             ];
             let messageIndex = 0;
             loadingMessage.textContent = loadingMessages[messageIndex];
-            
-            const messageInterval = setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                loadingMessage.textContent = loadingMessages[messageIndex];
-            }, 2000);
-
-            loadingAnimationContainer.setAttribute('data-interval', messageInterval);
-        }
-
-        function hideLoadingAnimation() {
-            loadingAnimationContainer.style.display = 'none';
-            const messageInterval = loadingAnimationContainer.getAttribute('data-interval');
-            if (messageInterval) {
-                clearInterval(parseInt(messageInterval));
-            }
-        }
-    </script>
-</body>
-</html>
