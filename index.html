@@ -272,11 +272,6 @@
             }
         }
 
-        summarizeButton.addEventListener('click', () => {
-            const missedTime = missedTimeSelect.value;
-            sendDataToWebhook(selectedMovieData, missedTime);
-        });
-
         async function checkExistingSummary(imdbID, missedMinutes) {
             const tableId = '339118';
             const url = `https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true&filter__imdb_id__equal=${imdbID}&filter__missed_minutes__equal=${missedMinutes}`;
@@ -314,10 +309,7 @@
                 if (existingSummary) {
                     console.log('Existing summary found:', existingSummary);
                     // Redirect to the summary page with existing data
-                    const summaryPageUrl = new URL('summary.html', window.location.href);
-                    summaryPageUrl.searchParams.append('imdbID', movieData.imdbID);
-                    summaryPageUrl.searchParams.append('missedMinutes', missedTime);
-                    window.location.href = summaryPageUrl.toString();
+                    redirectToSummaryPage(movieData.imdbID, missedTime);
                     return;
                 }
 
@@ -371,12 +363,8 @@
                     // Store movie data in session storage
                     sessionStorage.setItem('movieData', JSON.stringify(data.payload));
                     
-                    // Redirect to the summary page with minimal URL parameters
-                    const summaryPageUrl = new URL('summary.html', window.location.href);
-                    summaryPageUrl.searchParams.append('imdbID', data.payload.imdbID);
-                    summaryPageUrl.searchParams.append('missedMinutes', data.payload.missedMinutes);
-                    console.log('Redirecting to:', summaryPageUrl.toString());
-                    window.location.href = summaryPageUrl.toString();
+                    // Redirect to the summary page
+                    redirectToSummaryPage(movieData.imdbID, missedTime);
                 } else {
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
@@ -390,3 +378,22 @@
                 hideLoadingAnimation();
                 summarizeButton.disabled = false;
             }
+        }
+
+        function redirectToSummaryPage(imdbID, missedMinutes) {
+            const summaryPageUrl = new URL('summary.html', window.location.href);
+            summaryPageUrl.searchParams.append('imdbID', imdbID);
+            summaryPageUrl.searchParams.append('missedMinutes', missedMinutes);
+            console.log('Redirecting to:', summaryPageUrl.toString());
+            window.location.href = summaryPageUrl.toString();
+        }
+
+        summarizeButton.addEventListener('click', () => {
+            const missedTime = missedTimeSelect.value;
+            sendDataToWebhook(selectedMovieData, missedTime);
+        });
+
+        function showLoadingAnimation() {
+            loadingAnimationContainer.style.display = 'flex';
+            const loadingMessages = [
+                "Lights dimming...",
