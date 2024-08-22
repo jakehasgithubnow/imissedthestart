@@ -3,13 +3,13 @@
 <head>
      <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
     <script type='text/javascript'>
-  window.smartlook||(function(d) {
-    var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
-    var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
-    c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
-    })(document);
-    smartlook('init', 'ff7c704fd4470721b53a4983d320d9b84a9dcf37', { region: 'eu' });
-</script>
+    window.smartlook||(function(d) {
+        var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
+        var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
+        c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
+        })(document);
+        smartlook('init', 'ff7c704fd4470721b53a4983d320d9b84a9dcf37', { region: 'eu' });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What are you watching?</title>
@@ -192,6 +192,8 @@
         let timeoutId;
         let selectedMovieData = null;
 
+        const baserowApiKey = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
+
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
@@ -275,42 +277,81 @@
             sendDataToWebhook(selectedMovieData, missedTime);
         });
 
-        async function sendDataToWebhook(movieData, missedTime) {
-            const baseUrl = 'https://hook.eu2.make.com/ba4va15z1qcj3qds6r8mdrde5s6rnlnd';
-            const queryParams = `?test_success=true&source=movie_app`;
-            const webhookUrl = `${baseUrl}${queryParams}`;
-            
-            const data = {
-                payload: {
-                    imdbID: movieData.imdbID,
-                    missedMinutes: missedTime,
-                    Title: movieData.Title,
-                    Year: movieData.Year,
-                    Rated: movieData.Rated,
-                    Runtime: movieData.Runtime,
-                    Genre: movieData.Genre,
-                    Director: movieData.Director,
-                    Writer: movieData.Writer,
-                    Actors: movieData.Actors,
-                    Plot: movieData.Plot,
-                    Language: movieData.Language,
-                    Country: movieData.Country,
-                    Awards: movieData.Awards,
-                    Poster: movieData.Poster,
-                    Metascore: movieData.Metascore,
-                    imdbRating: movieData.imdbRating,
-                    imdbVotes: movieData.imdbVotes,
-                    Type: movieData.Type
-                }
-            };
-
-            console.log('Sending data to webhook:', JSON.stringify(data, null, 2));
-            console.log('Webhook URL:', webhookUrl);
+        async function checkExistingSummary(imdbID, missedMinutes) {
+            const tableId = '339118';
+            const url = `https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true&filter__imdb_id__equal=${imdbID}&filter__missed_minutes__equal=${missedMinutes}`;
 
             try {
-                showLoadingAnimation();
-                summarizeButton.disabled = true;
-                errorMessage.textContent = '';
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${baserowApiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch from Baserow');
+                }
+
+                const data = await response.json();
+                return data.count > 0 ? data.results[0] : null;
+            } catch (error) {
+                console.error('Error checking Baserow:', error);
+                return null;
+            }
+        }
+
+        async function sendDataToWebhook(movieData, missedTime) {
+            showLoadingAnimation();
+            summarizeButton.disabled = true;
+            errorMessage.textContent = '';
+
+            try {
+                // Check Baserow for existing summary
+                const existingSummary = await checkExistingSummary(movieData.imdbID, missedTime);
+
+                if (existingSummary) {
+                    console.log('Existing summary found:', existingSummary);
+                    // Redirect to the summary page with existing data
+                    const summaryPageUrl = new URL('summary.html', window.location.href);
+                    summaryPageUrl.searchParams.append('imdbID', movieData.imdbID);
+                    summaryPageUrl.searchParams.append('missedMinutes', missedTime);
+                    window.location.href = summaryPageUrl.toString();
+                    return;
+                }
+
+                // If no existing summary, proceed with Make.com webhook
+                const baseUrl = 'https://hook.eu2.make.com/ba4va15z1qcj3qds6r8mdrde5s6rnlnd';
+                const queryParams = `?test_success=true&source=movie_app`;
+                const webhookUrl = `${baseUrl}${queryParams}`;
+                
+                const data = {
+                    payload: {
+                        imdbID: movieData.imdbID,
+                        missedMinutes: missedTime,
+                        Title: movieData.Title,
+                        Year: movieData.Year,
+                        Rated: movieData.Rated,
+                        Runtime: movieData.Runtime,
+                        Genre: movieData.Genre,
+                        Director: movieData.Director,
+                        Writer: movieData.Writer,
+                        Actors: movieData.Actors,
+                        Plot: movieData.Plot,
+                        Language: movieData.Language,
+                        Country: movieData.Country,
+                        Awards: movieData.Awards,
+                        Poster: movieData.Poster,
+                        Metascore: movieData.Metascore,
+                        imdbRating: movieData.imdbRating,
+                        imdbVotes: movieData.imdbVotes,
+                        Type: movieData.Type
+                    }
+                };
+
+                console.log('Sending data to webhook:', JSON.stringify(data, null, 2));
+                console.log('Webhook URL:', webhookUrl);
 
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
@@ -349,35 +390,3 @@
                 hideLoadingAnimation();
                 summarizeButton.disabled = false;
             }
-        }
-        
-        function showLoadingAnimation() {
-            loadingAnimationContainer.style.display = 'flex';
-            const loadingMessages = [
-                "Lights dimming...",
-                "Getting your popcorn ready...",
-                "Rewinding the tape...",
-                "Adjusting the tracking...",
-                "Almost there!"
-            ];
-            let messageIndex = 0;
-            loadingMessage.textContent = loadingMessages[messageIndex];
-            
-            const messageInterval = setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                loadingMessage.textContent = loadingMessages[messageIndex];
-            }, 2000);
-
-            loadingAnimationContainer.setAttribute('data-interval', messageInterval);
-        }
-
-        function hideLoadingAnimation() {
-            loadingAnimationContainer.style.display = 'none';
-            const messageInterval = loadingAnimationContainer.getAttribute('data-interval');
-            if (messageInterval) {
-                clearInterval(parseInt(messageInterval));
-            }
-        }
-    </script>
-</body>
-</html>
