@@ -301,13 +301,13 @@
             }
         }
 
-       // Event listener for summarize button
-summarizeButton.addEventListener('click', () => {
-    const missedTime = missedTimeSelect.value;
-    sendDataToWebhook(selectedMovieData, missedTime);
-});
+        // Event listener for summarize button
+        summarizeButton.addEventListener('click', () => {
+            const missedTime = missedTimeSelect.value;
+            sendDataToWebhook(selectedMovieData, missedTime);
+        });
 
-// Function to check Baserow for existing summary
+        // Function to check Baserow for existing summary
 async function checkBaserow(imdbID, missedMinutes) {
     const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
     const TABLE_ID = '339118';
@@ -405,7 +405,7 @@ async function sendDataToWebhook(movieData, missedTime) {
         }
     } catch (error) {
         console.error('Error:', error);
-        errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+        redirectToFailPage();
     } finally {
         hideLoadingAnimation();
         summarizeButton.disabled = false;
@@ -435,36 +435,42 @@ function handleWebhookResponse(movieData, responseData) {
     console.log('Redirecting to:', summaryPageUrl.toString());
     window.location.href = summaryPageUrl.toString();
 }
-        
-        // Function to show loading animation
-        function showLoadingAnimation() {
-            loadingAnimationContainer.style.display = 'flex';
-            const loadingMessages = [
-                "Lights dimming...",
-                "Getting your popcorn ready...",
-                "Rewinding the tape...",
-                "Adjusting the tracking...",
-                "Almost there!"
-            ];
-            let messageIndex = 0;
-            loadingMessage.textContent = loadingMessages[messageIndex];
-            
-            const messageInterval = setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                loadingMessage.textContent = loadingMessages[messageIndex];
-            }, 2000);
 
-            loadingAnimationContainer.setAttribute('data-interval', messageInterval);
-        }
+// Function to show loading animation
+function showLoadingAnimation() {
+    loadingAnimationContainer.style.display = 'flex';
+    const loadingMessages = [
+        "Lights dimming...",
+        "Getting your popcorn ready...",
+        "Rewinding the tape...",
+        "Adjusting the tracking...",
+        "Almost there!"
+    ];
+    let messageIndex = 0;
+    loadingMessage.textContent = loadingMessages[messageIndex];
+    
+    const messageInterval = setInterval(() => {
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        loadingMessage.textContent = loadingMessages[messageIndex];
+    }, 2000);
 
-     // Function to hide loading animation
-        function hideLoadingAnimation() {
-            loadingAnimationContainer.style.display = 'none';
-            const messageInterval = loadingAnimationContainer.getAttribute('data-interval');
-            if (messageInterval) {
-                clearInterval(parseInt(messageInterval));
-            }
-        }
-    </script>
+    loadingAnimationContainer.setAttribute('data-interval', messageInterval);
+}
+
+// Function to hide loading animation
+function hideLoadingAnimation() {
+    loadingAnimationContainer.style.display = 'none';
+    const messageInterval = loadingAnimationContainer.getAttribute('data-interval');
+    if (messageInterval) {
+        clearInterval(parseInt(messageInterval));
+    }
+}
+
+// New function to handle redirection to fail page
+function redirectToFailPage() {
+    window.location.href = 'https://imissedthestart.com/fail.html';
+}
+
+</script>
 </body>
 </html>
