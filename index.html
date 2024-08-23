@@ -203,111 +203,125 @@
 
     <!-- JavaScript -->
     <script>
-        // DOM element references
-        const searchInput = document.getElementById('searchInput');
-        const resultsContainer = document.getElementById('results');
-        const missedTimeContainer = document.getElementById('missedTimeContainer');
-        const missedTimeSelect = document.getElementById('missedTimeSelect');
-        const summarizeButton = document.getElementById('summarizeButton');
-        const loadingAnimationContainer = document.getElementById('loadingAnimationContainer');
-        const loadingMessage = document.getElementById('loadingMessage');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        // Global variables
-        let timeoutId;
-        let selectedMovieData = null;
 
-        // Event listener for search input
-        searchInput.addEventListener('input', () => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                const query = searchInput.value.trim();
-                if (query.length > 2) {
-                    searchMovies(query);
-                } else {
-                    resultsContainer.innerHTML = '';
-                }
-            }, 300);
-        });
+// DOM element references
+const searchInput = document.getElementById('searchInput');
+const resultsContainer = document.getElementById('results');
+const missedTimeContainer = document.getElementById('missedTimeContainer');
+const missedTimeSelect = document.getElementById('missedTimeSelect');
+const summarizeButton = document.getElementById('summarizeButton');
+const loadingAnimationContainer = document.getElementById('loadingAnimationContainer');
+const loadingMessage = document.getElementById('loadingMessage');
+const errorMessage = document.getElementById('errorMessage');
 
-        // Function to search for movies
-        async function searchMovies(query) {
-            try {
-                const apiKey = 'b3970299'; // OMDB API key
-                const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${query}&type=movie`);
-                const data = await response.json();
+// Global variables
+let timeoutId;
+let selectedContentData = null;
 
-                if (data.Response === "True" && data.Search) {
-                    displayResults(data.Search);
-                } else {
-                    resultsContainer.innerHTML = '<div class="result-item">No movies found</div>';
-                }
-            } catch (error) {
-                console.error('Error searching movies:', error);
-                errorMessage.textContent = 'An error occurred while searching for movies. Please try again.';
-            }
-        }
-
-        // Function to display search results
-        function displayResults(movies) {
+// Event listener for search input
+searchInput.addEventListener('input', () => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+        const query = searchInput.value.trim();
+        if (query.length > 2) {
+            searchContent(query);
+        } else {
             resultsContainer.innerHTML = '';
-            movies.forEach(movie => {
-                const div = document.createElement('div');
-                div.classList.add('result-item');
-                div.textContent = `${movie.Title} (${movie.Year})`;
-                div.addEventListener('click', () => {
-                    getMovieDetails(movie.imdbID);
-                });
-                resultsContainer.appendChild(div);
-            });
         }
+    }, 300);
+});
 
-        // Function to get detailed movie information
-        async function getMovieDetails(imdbID) {
-            try {
-                const apiKey = 'b3970299'; // OMDB API key
-                const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}`);
-                const data = await response.json();
-
-                if (data.Response === "True") {
-                    selectedMovieData = data;
-                    searchInput.value = data.Title;
-                    resultsContainer.innerHTML = '';
-                    showMissedTimeDropdown();
-                } else {
-                    throw new Error('Failed to fetch movie details');
-                }
-            } catch (error) {
-                console.error('Error fetching movie details:', error);
-                errorMessage.textContent = 'An error occurred while fetching movie details. Please try again.';
-            }
+// Function to search for movies and TV shows
+async function searchContent(query) {
+    try {
+        const apiKey = 'b3970299'; // OMDB API key
+        const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${query}`);
+        const data = await response.json();
+        if (data.Response === "True" && data.Search) {
+            displayResults(data.Search);
+        } else {
+            resultsContainer.innerHTML = '<div class="result-item">No results found</div>';
         }
+    } catch (error) {
+        console.error('Error searching content:', error);
+        errorMessage.textContent = 'An error occurred while searching. Please try again.';
+    }
+}
 
-        // Function to show missed time dropdown
-        function showMissedTimeDropdown() {
-            missedTimeContainer.style.display = 'block';
-            summarizeButton.style.display = 'block';
-            populateMissedTimeDropdown();
-        }
-
-        // Function to populate missed time dropdown
-        function populateMissedTimeDropdown() {
-            missedTimeSelect.innerHTML = '';
-            for (let i = 5; i <= 60; i += 5) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i} minutes`;
-                missedTimeSelect.appendChild(option);
-            }
-        }
-
-        // Event listener for summarize button
-        summarizeButton.addEventListener('click', () => {
-            const missedTime = missedTimeSelect.value;
-            sendDataToWebhook(selectedMovieData, missedTime);
+// Function to display search results
+function displayResults(results) {
+    resultsContainer.innerHTML = '';
+    results.forEach(item => {
+        const div = document.createElement('div');
+        div.classList.add('result-item');
+        div.textContent = `${item.Title} (${item.Year}) - ${item.Type}`;
+        div.addEventListener('click', () => {
+            getContentDetails(item.imdbID);
         });
+        resultsContainer.appendChild(div);
+    });
+}
 
-        // Function to check Baserow for existing summary
+// Function to get detailed content information
+async function getContentDetails(imdbID) {
+    try {
+        const apiKey = 'b3970299'; // OMDB API key
+        const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}`);
+        const data = await response.json();
+        if (data.Response === "True") {
+            selectedContentData = data;
+            searchInput.value = data.Title;
+            resultsContainer.innerHTML = '';
+            showMissedTimeDropdown(data.Type);
+        } else {
+            throw new Error('Failed to fetch content details');
+        }
+    } catch (error) {
+        console.error('Error fetching content details:', error);
+        errorMessage.textContent = 'An error occurred while fetching details. Please try again.';
+    }
+}
+
+// Function to show missed time dropdown
+function showMissedTimeDropdown(contentType) {
+    missedTimeContainer.style.display = 'block';
+    summarizeButton.style.display = 'block';
+    if (contentType === 'series') {
+        populateEpisodeDropdown();
+    } else {
+        populateMissedTimeDropdown();
+    }
+}
+
+// Function to populate missed time dropdown for movies
+function populateMissedTimeDropdown() {
+    missedTimeSelect.innerHTML = '';
+    for (let i = 5; i <= 60; i += 5) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${i} minutes`;
+        missedTimeSelect.appendChild(option);
+    }
+}
+
+// Function to populate episode dropdown for TV shows
+function populateEpisodeDropdown() {
+    missedTimeSelect.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Episode ${i}`;
+        missedTimeSelect.appendChild(option);
+    }
+}
+
+// Event listener for summarize button
+summarizeButton.addEventListener('click', () => {
+    const missedTime = missedTimeSelect.value;
+    sendDataToWebhook(selectedContentData, missedTime);
+});
+
+// Function to check Baserow for existing summary
 async function checkBaserow(imdbID, missedMinutes) {
     const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
     const TABLE_ID = '339118';
@@ -335,46 +349,46 @@ async function checkBaserow(imdbID, missedMinutes) {
 }
 
 // Function to send data to webhook
-async function sendDataToWebhook(movieData, missedTime) {
+async function sendDataToWebhook(contentData, missedTime) {
     try {
         showLoadingAnimation();
         summarizeButton.disabled = true;
         errorMessage.textContent = '';
 
         // Check Baserow first
-        const existingSummary = await checkBaserow(movieData.imdbID, missedTime);
+        const existingSummary = await checkBaserow(contentData.imdbID, missedTime);
 
         if (existingSummary) {
             console.log('Summary found in Baserow:', existingSummary);
             // Use existing summary
-            handleExistingSummary(movieData, existingSummary, missedTime);
+            handleExistingSummary(contentData, existingSummary, missedTime);
         } else {
             // No existing summary, proceed with Make.com webhook
             const baseUrl = 'https://hook.eu2.make.com/ba4va15z1qcj3qds6r8mdrde5s6rnlnd';
-            const queryParams = `?test_success=true&source=movie_app`;
+            const queryParams = `?test_success=true&source=content_app`;
             const webhookUrl = `${baseUrl}${queryParams}`;
             
             const data = {
                 payload: {
-                    imdbID: movieData.imdbID,
+                    imdbID: contentData.imdbID,
                     missedMinutes: missedTime,
-                    Title: movieData.Title,
-                    Year: movieData.Year,
-                    Rated: movieData.Rated,
-                    Runtime: movieData.Runtime,
-                    Genre: movieData.Genre,
-                    Director: movieData.Director,
-                    Writer: movieData.Writer,
-                    Actors: movieData.Actors,
-                    Plot: movieData.Plot,
-                    Language: movieData.Language,
-                    Country: movieData.Country,
-                    Awards: movieData.Awards,
-                    Poster: movieData.Poster,
-                    Metascore: movieData.Metascore,
-                    imdbRating: movieData.imdbRating,
-                    imdbVotes: movieData.imdbVotes,
-                    Type: movieData.Type
+                    Title: contentData.Title,
+                    Year: contentData.Year,
+                    Rated: contentData.Rated,
+                    Runtime: contentData.Runtime,
+                    Genre: contentData.Genre,
+                    Director: contentData.Director,
+                    Writer: contentData.Writer,
+                    Actors: contentData.Actors,
+                    Plot: contentData.Plot,
+                    Language: contentData.Language,
+                    Country: contentData.Country,
+                    Awards: contentData.Awards,
+                    Poster: contentData.Poster,
+                    Metascore: contentData.Metascore,
+                    imdbRating: contentData.imdbRating,
+                    imdbVotes: contentData.imdbVotes,
+                    Type: contentData.Type
                 }
             };
 
@@ -405,33 +419,33 @@ async function sendDataToWebhook(movieData, missedTime) {
         }
     } catch (error) {
         console.error('Error:', error);
-        redirectToFailPage();
+        errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
     } finally {
         hideLoadingAnimation();
         summarizeButton.disabled = false;
     }
 }
 
-function handleExistingSummary(movieData, summaryData, missedMinutes) {
-    // Store movie data in session storage
-    sessionStorage.setItem('movieData', JSON.stringify(movieData));
+function handleExistingSummary(contentData, summaryData, missedMinutes) {
+    // Store content data in session storage
+    sessionStorage.setItem('contentData', JSON.stringify(contentData));
     
     // Redirect to the summary page
     const summaryPageUrl = new URL('summary.html', window.location.href);
-    summaryPageUrl.searchParams.append('imdbID', movieData.imdbID);
+    summaryPageUrl.searchParams.append('imdbID', contentData.imdbID);
     summaryPageUrl.searchParams.append('missedMinutes', missedMinutes);
     console.log('Redirecting to:', summaryPageUrl.toString());
     window.location.href = summaryPageUrl.toString();
 }
 
-function handleWebhookResponse(movieData, responseData) {
-    // Store movie data in session storage
-    sessionStorage.setItem('movieData', JSON.stringify(movieData));
+function handleWebhookResponse(contentData, responseData) {
+    // Store content data in session storage
+    sessionStorage.setItem('contentData', JSON.stringify(contentData));
     
     // Redirect to the summary page
     const summaryPageUrl = new URL('summary.html', window.location.href);
-    summaryPageUrl.searchParams.append('imdbID', movieData.imdbID);
-    summaryPageUrl.searchParams.append('missedMinutes', movieData.missedMinutes);
+    summaryPageUrl.searchParams.append('imdbID', contentData.imdbID);
+    summaryPageUrl.searchParams.append('missedMinutes', contentData.missedMinutes);
     console.log('Redirecting to:', summaryPageUrl.toString());
     window.location.href = summaryPageUrl.toString();
 }
@@ -465,7 +479,7 @@ function hideLoadingAnimation() {
         clearInterval(parseInt(messageInterval));
     }
 }
-
+        
 // New function to handle redirection to fail page
 function redirectToFailPage() {
     window.location.href = 'https://imissedthestart.com/fail.html';
