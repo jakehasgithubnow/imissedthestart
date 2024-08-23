@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oops! We Couldn't Summarize That</title>
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Smartlook analytics script -->
+    <script type='text/javascript'>
+        window.smartlook||(function(d) {
+            var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
+            var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
+            c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
+        })(document);
+        smartlook('init', 'ff7c704fd4470721b53a4983d320d9b84a9dcf37', { region: 'eu' });
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #F4BE1E;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        h1, h2, h3 {
+            font-family: 'Press Start 2P', cursive;
+            color: #4a4a4a;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 18px;
+        }
+        p {
+            font-family: Arial, sans-serif;
+            color: #4a4a4a;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-family: 'Press Start 2P', cursive;
+            background-color: #D62A2A;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #B52323;
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            h2 {
+                font-size: 16px;
+            }
+            .button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/">
+        <img src="logo.png" alt="I missed The start" class="logo">
+    </a>
+    <div class="container">
+        <h1>Oops! We Hit a Snag</h1>
+        <p>We're sorry, but we couldn't generate a summary for the movie you selected. This could be due to a few reasons:</p>
+        <ul style="text-align: left;">
+            <li>The movie might be too new or obscure</li>
+            <li>We couldn't find reliable information about the first few minutes</li>
+            <li>There was a technical issue on our end</li>
+        </ul>
+        <h2>What Can You Do?</h2>
+        <p>Don't worry! Here are a few options:</p>
+        <ul style="text-align: left;">
+            <li>Try searching for a different movie</li>
+            <li>Check back later - we're always updating our database</li>
+            <li>If you think this is an error, please let us know</li>
+        </ul>
+        <a href="/" class="button">Try Another Movie</a>
+    </div>
+    <div class="reddit-link">
+        <h3><a href="https://www.reddit.com/r/SideProject/comments/1ev428t/missed_the_start_of_a_movie_i_made_a_tool_that/" target="_blank" style="color: #4a4a4a; text-decoration: none;"><u>Useful? Fun? Make my day with an upvote on Reddit.</u></a></h3>
+    </div>
+</body>
+</html>
