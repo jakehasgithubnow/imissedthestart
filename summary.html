@@ -102,9 +102,9 @@
     </style>
 </head>
 <body>
-    <a href="/">
-        <img src="logo.png" alt="I missed The start" class="logo">
-    </a>
+<a href="/">
+    <img src="logo.png" alt="I missed The start" class="logo">
+</a>
     <div class="container">
         <h1>Movie Summary</h1>
         <div id="loadingMessage">Loading summary...</div>
@@ -169,10 +169,12 @@
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'none';
 
+            const posterUrl = '/api/placeholder/300/450';
             const htmlSummary = marked(summaryData.Summary || 'No summary available.');
             
             summaryContent.innerHTML = `
                 <h2>${summaryData.imdb_id} - Missed ${summaryData.missed_minutes} minutes</h2>
+                <img src="${posterUrl}" alt="Movie Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
                 <div class="summary">${htmlSummary}</div>
             `;
         }
