@@ -1,118 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script type='text/javascript'>
-  window.smartlook||(function(d) {
-    var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
-    var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
-    c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
-    })(document);
-    smartlook('init', 'ff7c704fd4470721b53a4983d320d9b84a9dcf37', { region: 'eu' });
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Summary</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #F4BE1E;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background: white;
-            padding: 20px;
-            border-radius: 25px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .logo {
-            max-width: 300px;
-            width: 100%;
-            height: auto;
-            margin-bottom: 20px;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Press Start 2P', cursive;
-            color: #4a4a4a;
-            text-align: center;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        h2 {
-            font-size: 18px;
-        }
-        h3 {
-            font-size: 14px;
-            margin: 0;
-        }
-        #loadingMessage, #errorMessage {
-            text-align: center;
-            font-style: italic;
-            color: #D62A2A;
-            font-family: 'Press Start 2P', cursive;
-        }
-        #summaryContent {
-            margin-top: 20px;
-        }
-        .poster {
-            max-width: 300px;
-            height: auto;
-            display: block;
-            margin: 20px auto;
-            border-radius: 15px;
-        }
-        .summary {
-            text-align: justify;
-            font-family: Arial, sans-serif;
-            color: #4a4a4a;
-        }
-        .reddit-link {
-            text-align: center;
-            margin-top: 20px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-        }
-        .reddit-link a {
-            color: #4a4a4a;
-            text-decoration: none;
-        }
-        .reddit-link a:hover {
-            text-decoration: underline;
-        }
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 20px;
-            }
-            h2 {
-                font-size: 16px;
-            }
-            h3 {
-                font-size: 12px;
-            }
-        }
+        /* Your existing styles here */
     </style>
 </head>
 <body>
-<a href="/">
-    <img src="logo.png" alt="I missed The start" class="logo">
-</a>
+    <a href="/">
+        <img src="logo.png" alt="I missed The start" class="logo">
+    </a>
     <div class="container">
         <h1>Movie Summary</h1>
         <div id="loadingMessage">Loading summary...</div>
@@ -128,29 +29,22 @@
             const imdbID = urlParams.get('imdbID');
             const missedMinutes = urlParams.get('missedMinutes');
             
-            // Retrieve full movie data from session storage
-            const movieData = JSON.parse(sessionStorage.getItem('movieData'));
-            
-            if (movieData && movieData.imdbID === imdbID) {
-                fetchSummary(movieData, missedMinutes);
+            if (imdbID && missedMinutes) {
+                fetchSummaryFromBaserow(imdbID, missedMinutes);
             } else {
-                console.error('Movie data not found in session storage or mismatch in imdbID');
-                displayError('Error: Movie data not found. Please try searching again.');
+                displayError('Error: Missing movie information. Please try searching again.');
             }
         });
 
-        async function fetchSummary(movieData, missedMinutes) {
+        async function fetchSummaryFromBaserow(imdbID, missedMinutes) {
             try {
-                console.log('Movie Data:', movieData);
-                console.log('Missed Minutes:', missedMinutes);
-
                 const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
                 const TABLE_ID = '339118';
-                const IMDB_ID_FIELD = 'field_2502473';
-                const MISSED_MINUTES_FIELD = 'field_2502474';
+                const IMDB_ID_FIELD = 'imdb_id';
+                const MISSED_MINUTES_FIELD = 'missed_minutes';
 
-                const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__${IMDB_ID_FIELD}__equal=${movieData.imdbID}&filter__${MISSED_MINUTES_FIELD}__equal=${missedMinutes}`;
-                console.log('API URL:', url);
+                const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__${IMDB_ID_FIELD}__equal=${imdbID}&filter__${MISSED_MINUTES_FIELD}__equal=${missedMinutes}`;
+                console.log('Fetching from Baserow:', url);
 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -165,40 +59,31 @@
                 }
 
                 const data = await response.json();
-                console.log('Full API Response:', JSON.stringify(data, null, 2));
+                console.log('Baserow response:', data);
 
                 if (data.results && data.results.length > 0) {
                     const summaryData = data.results[0];
-                    displaySummary(movieData, summaryData);
+                    displaySummary(summaryData);
                 } else {
-                    throw new Error('Summary not found in Baserow with matching IMDB ID and missed minutes');
+                    throw new Error('Summary not found in Baserow');
                 }
             } catch (error) {
-                console.error('Error in fetchSummary:', error);
+                console.error('Error in fetchSummaryFromBaserow:', error);
                 displayError(`Failed to load summary: ${error.message}`);
             }
         }
 
-        function displaySummary(movieData, summaryData) {
-            console.log('Displaying summary for:', movieData);
-            console.log('Summary data:', summaryData);
+        function displaySummary(summaryData) {
             const summaryContent = document.getElementById('summaryContent');
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'none';
 
-            const posterUrl = movieData.Poster || '/api/placeholder/300/450';
             const htmlSummary = marked(summaryData.Summary || 'No summary available.');
             
             summaryContent.innerHTML = `
-                <h2>${movieData.Title} (${movieData.Year})</h2>
-                <img src="${posterUrl}" alt="${movieData.Title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <h2>${summaryData.imdb_id} - Missed ${summaryData.missed_minutes} minutes</h2>
                 <div class="summary">${htmlSummary}</div>
             `;
-
-            // Additional check for image loading
-            const posterImg = summaryContent.querySelector('.poster');
-            posterImg.addEventListener('load', () => console.log('Poster image loaded successfully'));
-            posterImg.addEventListener('error', () => console.error('Failed to load poster image'));
         }
 
         function displayError(message) {
@@ -209,6 +94,5 @@
             errorMessage.textContent = message;
         }
     </script>
-
 </body>
 </html>
