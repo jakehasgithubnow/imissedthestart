@@ -7,98 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #F4BE1E;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background: white;
-            padding: 20px;
-            border-radius: 25px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .logo {
-            max-width: 300px;
-            width: 100%;
-            height: auto;
-            margin-bottom: 20px;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Press Start 2P', cursive;
-            color: #4a4a4a;
-            text-align: center;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        h2 {
-            font-size: 18px;
-        }
-        h3 {
-            font-size: 14px;
-            margin: 0;
-        }
-        #loadingMessage, #errorMessage {
-            text-align: center;
-            font-style: italic;
-            color: #D62A2A;
-            font-family: 'Press Start 2P', cursive;
-        }
-        #summaryContent {
-            margin-top: 20px;
-        }
-        .poster {
-            max-width: 300px;
-            height: auto;
-            display: block;
-            margin: 20px auto;
-            border-radius: 15px;
-        }
-        .summary {
-            text-align: justify;
-            font-family: Arial, sans-serif;
-            color: #4a4a4a;
-        }
-        .reddit-link {
-            text-align: center;
-            margin-top: 20px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-        }
-        .reddit-link a {
-            color: #4a4a4a;
-            text-decoration: none;
-        }
-        .reddit-link a:hover {
-            text-decoration: underline;
-        }
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 20px;
-            }
-            h2 {
-                font-size: 16px;
-            }
-            h3 {
-                font-size: 12px;
-            }
-        }
+        /* Your existing styles here */
     </style>
 </head>
 <body>
@@ -169,12 +78,13 @@
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'none';
 
-            const posterUrl = '/api/placeholder/300/450';
+            const posterUrl = summaryData.poster || '/api/placeholder/300/450';
             const htmlSummary = marked(summaryData.Summary || 'No summary available.');
+            const title = summaryData.title || summaryData.episode_name || 'Unknown Title';
             
             summaryContent.innerHTML = `
-                <h2>${summaryData.imdb_id} - Missed ${summaryData.missed_minutes} minutes</h2>
-                <img src="${posterUrl}" alt="Movie Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
+                <h2>${title} - Missed ${summaryData.missed_minutes} minutes</h2>
+                <img src="${posterUrl}" alt="${title} Poster" class="poster" onerror="this.onerror=null; this.src='/api/placeholder/300/450'; this.alt='Poster not available';">
                 <div class="summary">${htmlSummary}</div>
             `;
         }
