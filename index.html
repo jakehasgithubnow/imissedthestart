@@ -396,190 +396,187 @@
                 option.textContent = `${i} minutes`;
                 missedTimeSelect.appendChild(option);
             }
+        }
 
-// Event listener for summarize button
-summarizeButton.addEventListener('click', () => {
-    const missedTime = missedTimeSelect.value;
-    const contentId = selectedContentData.Type === 'series' ? selectedEpisodeId : selectedContentData.imdbID;
-    if (selectedContentData.Type === 'series' && !contentId) {
-        errorMessage.textContent = 'Please select a season and episode.';
-        return;
-    }
-    sendDataToWebhook(contentId, missedTime);
-});
-
-// Function to check Baserow for existing summary
-async function checkBaserow(imdbID, missedMinutes) {
-    const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
-    const TABLE_ID = '339118';
-    const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__imdb_id__equal=${imdbID}&filter__missed_minutes__equal=${missedMinutes}`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Token ${BASEROW_API_TOKEN}`,
-                'Content-Type': 'application/json'
+        // Event listener for summarize button
+        summarizeButton.addEventListener('click', () => {
+            const missedTime = missedTimeSelect.value;
+            const contentId = selectedContentData.Type === 'series' ? selectedEpisodeId : selectedContentData.imdbID;
+            if (selectedContentData.Type === 'series' && !contentId) {
+                errorMessage.textContent = 'Please select a season and episode.';
+                return;
             }
+            if (!missedTime) {
+                errorMessage.textContent = 'Please select how much time you missed.';
+                return;
+            }
+            sendDataToWebhook(contentId, missedTime);
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // Function to check Baserow for existing summary
+        async function checkBaserow(imdbID, missedMinutes) {
+            const BASEROW_API_TOKEN = 'mYu3B40C2DZhIMv7juUKEiiH0iL5X4hA';
+            const TABLE_ID = '339118';
+            const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true&filter__imdb_id__equal=${imdbID}&filter__missed_minutes__equal=${missedMinutes}`;
 
-        const data = await response.json();
-        return data.results.length > 0 ? data.results[0] : null;
-    } catch (error) {
-        console.error('Error checking Baserow:', error);
-        return null;
-    }
-}
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${BASEROW_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-// Function to send data to webhook
-async function sendDataToWebhook(contentId, missedTime) {
-    try {
-        showLoadingAnimation();
-        summarizeButton.disabled = true;
-        errorMessage.textContent = '';
-
-        // Check Baserow first
-        const existingSummary = await checkBaserow(contentId, missedTime);
-
-        if (existingSummary) {
-            console.log('Summary found in Baserow:', existingSummary);
-            // Use existing summary
-            handleExistingSummary(selectedContentData, existingSummary, missedTime);
-        } else {
-            // No existing summary, proceed with Make.com webhook
-            const baseUrl = 'https://hook.eu2.make.com/ba4va15z1qcj3qds6r8mdrde5s6rnlnd';
-            const queryParams = `?test_success=true&source=content_app`;
-            const webhookUrl = `${baseUrl}${queryParams}`;
-            
-            const data = {
-                payload: {
-                    imdbID: contentId,
-                    missedMinutes: missedTime,
-                    Title: selectedContentData.Title,
-                    Year: selectedContentData.Year,
-                    Rated: selectedContentData.Rated,
-                    Runtime: selectedContentData.Runtime,
-                    Genre: selectedContentData.Genre,
-                    Director: selectedContentData.Director,
-                    Writer: selectedContentData.Writer,
-                    Actors: selectedContentData.Actors,
-                    Plot: selectedContentData.Plot,
-                    Language: selectedContentData.Language,
-                    Country: selectedContentData.Country,
-                    Awards: selectedContentData.Awards,
-                    Poster: selectedContentData.Poster,
-                    Metascore: selectedContentData.Metascore,
-                    imdbRating: selectedContentData.imdbRating,
-                    imdbVotes: selectedContentData.imdbVotes,
-                    Type: selectedContentData.Type
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            };
 
-            // Add episode-specific information if it's a TV show
-            if (selectedContentData.Type === 'series') {
-                const selectedSeason = seasonSelect.value;
-                const selectedEpisode = episodeSelect.selectedOptions[0].text;
-                data.payload.Season = selectedSeason;
-                data.payload.Episode = selectedEpisode;
-            }
-
-            console.log('Sending data to webhook:', JSON.stringify(data, null, 2));
-            console.log('Webhook URL:', webhookUrl);
-
-            const response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-
-            console.log('Response status:', response.status);
-            console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers), null, 2));
-
-            if (response.ok) {
-                const responseData = await response.json();
-                console.log('Response from webhook:', responseData);
-                handleWebhookResponse(data.payload, responseData);
-            } else {
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                console.error('Full error response object:', response);
-                throw new Error('Failed to send request to webhook');
+                const data = await response.json();
+                return data.results.length > 0 ? data.results[0] : null;
+            } catch (error) {
+                console.error('Error checking Baserow:', error);
+                return null;
             }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
-    } finally {
-        hideLoadingAnimation();
-        summarizeButton.disabled = false;
-    }
-}
 
-function handleExistingSummary(contentData, summaryData, missedMinutes) {
-    // Store content data in session storage
-    sessionStorage.setItem('contentData', JSON.stringify(contentData));
-    
-    // Redirect to the summary page
-    const summaryPageUrl = new URL('summary.html', window.location.href);
-    summaryPageUrl.searchParams.append('imdbID', contentData.imdbID);
-    summaryPageUrl.searchParams.append('missedMinutes', missedMinutes);
-    console.log('Redirecting to:', summaryPageUrl.toString());
-    window.location.href = summaryPageUrl.toString();
-}
+        // Function to send data to webhook
+        async function sendDataToWebhook(contentId, missedTime) {
+            try {
+                showLoadingAnimation();
+                summarizeButton.disabled = true;
+                errorMessage.textContent = '';
 
-function handleWebhookResponse(contentData, responseData) {
-    // Store content data in session storage
-    sessionStorage.setItem('contentData', JSON.stringify(contentData));
-    
-    // Redirect to the summary page
-    const summaryPageUrl = new URL('summary.html', window.location.href);
-    summaryPageUrl.searchParams.append('imdbID', contentData.imdbID);
-    summaryPageUrl.searchParams.append('missedMinutes', contentData.missedMinutes);
-    console.log('Redirecting to:', summaryPageUrl.toString());
-    window.location.href = summaryPageUrl.toString();
-}
+                // Check Baserow first
+                const existingSummary = await checkBaserow(contentId, missedTime);
 
-// Function to show loading animation
-function showLoadingAnimation() {
-    loadingAnimationContainer.style.display = 'flex';
-    const loadingMessages = [
-        "Lights dimming...",
-        "Getting your popcorn ready...",
-        "Rewinding the tape...",
-        "Adjusting the tracking...",
-        "Almost there!"
-    ];
-    let messageIndex = 0;
-    loadingMessage.textContent = loadingMessages[messageIndex];
-    
-    const messageInterval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % loadingMessages.length;
-        loadingMessage.textContent = loadingMessages[messageIndex];
-    }, 2000);
+                if (existingSummary) {
+                    console.log('Summary found in Baserow:', existingSummary);
+                    // Use existing summary
+                    handleExistingSummary(selectedContentData, existingSummary, missedTime);
+                } else {
+                    // No existing summary, proceed with Make.com webhook
+                    const baseUrl = 'https://hook.eu2.make.com/ba4va15z1qcj3qds6r8mdrde5s6rnlnd';
+                    const queryParams = `?test_success=true&source=content_app`;
+                    const webhookUrl = `${baseUrl}${queryParams}`;
+                    
+                    const data = {
+                        payload: {
+                            imdbID: contentId,
+                            missedMinutes: missedTime,
+                            Title: selectedContentData.Title,
+                            Year: selectedContentData.Year,
+                            Rated: selectedContentData.Rated,
+                            Runtime: selectedContentData.Runtime,
+                            Genre: selectedContentData.Genre,
+                            Director: selectedContentData.Director,
+                            Writer: selectedContentData.Writer,
+                            Actors: selectedContentData.Actors,
+                            Plot: selectedContentData.Plot,
+                            Language: selectedContentData.Language,
+                            Country: selectedContentData.Country,
+                            Awards: selectedContentData.Awards,
+                            Poster: selectedContentData.Poster,
+                            Metascore: selectedContentData.Metascore,
+                            imdbRating: selectedContentData.imdbRating,
+                            imdbVotes: selectedContentData.imdbVotes,
+                            Type: selectedContentData.Type
+                        }
+                    };
 
-    loadingAnimationContainer.setAttribute('data-interval', messageInterval);
-}
+                    // Add episode-specific information if it's a TV show
+                    if (selectedContentData.Type === 'series') {
+                        const selectedSeason = seasonSelect.value;
+                        const selectedEpisode = episodeSelect.selectedOptions[0].text;
+                        data.payload.Season = selectedSeason;
+                        data.payload.Episode = selectedEpisode;
+                    }
 
-// Function to hide loading animation
-function hideLoadingAnimation() {
-    loadingAnimationContainer.style.display = 'none';
-    const messageInterval = loadingAnimationContainer.getAttribute('data-interval');
-    if (messageInterval) {
-        clearInterval(parseInt(messageInterval));
-    }
-}
-        
-// New function to handle redirection to fail page
-function redirectToFailPage() {
-    window.location.href = 'https://imissedthestart.com/fail.html';
-}
+                    console.log('Sending data to webhook:', JSON.stringify(data, null, 2));
+                    console.log('Webhook URL:', webhookUrl);
 
-</script>
-</body>
-</html>
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', JSON.stringify(Object.fromEntries(response.headers), null, 2));
+
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        console.log('Response from webhook:', responseData);
+                        handleWebhookResponse(data.payload, responseData);
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
+                        console.error('Full error response object:', response);
+                        throw new Error('Failed to send request to webhook');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+            } finally {
+                hideLoadingAnimation();
+                summarizeButton.disabled = false;
+            }
+        }
+
+        function handleExistingSummary(contentData, summaryData, missedMinutes) {
+            // Store content data in session storage
+            sessionStorage.setItem('contentData', JSON.stringify(contentData));
+            
+            // Redirect to the summary page
+            const summaryPageUrl = new URL('summary.html', window.location.href);
+            summaryPageUrl.searchParams.append('imdbID', contentData.imdbID);
+            summaryPageUrl.searchParams.append('missedMinutes', missedMinutes);
+            console.log('Redirecting to:', summaryPageUrl.toString());
+            window.location.href = summaryPageUrl.toString();
+        }
+
+        function handleWebhookResponse(contentData, responseData) {
+            // Store content data in session storage
+            sessionStorage.setItem('contentData', JSON.stringify(contentData));
+            
+            // Redirect to the summary page
+            const summaryPageUrl = new URL('summary.html', window.location.href);
+            summaryPageUrl.searchParams.append('imdbID', contentData.imdbID);
+            summaryPageUrl.searchParams.append('missedMinutes', contentData.missedMinutes);
+            console.log('Redirecting to:', summaryPageUrl.toString());
+            window.location.href = summaryPageUrl.toString();
+        }
+
+        // Function to show loading animation
+        function showLoadingAnimation() {
+            loadingAnimationContainer.style.display = 'flex';
+            const loadingMessages = [
+                "Lights dimming...",
+                "Getting your popcorn ready...",
+                "Rewinding the tape...",
+                "Adjusting the tracking...",
+                "Almost there!"
+            ];
+            let messageIndex = 0;
+            loadingMessage.textContent = loadingMessages[messageIndex];
+            
+            const messageInterval = setInterval(() => {
+                messageIndex = (messageIndex + 1) % loadingMessages.length;
+                loadingMessage.textContent = loadingMessages[messageIndex];
+            }, 2000);
+
+            loadingAnimationContainer.setAttribute('data-interval', messageInterval);
+        }
+
+        // Function to hide loading animation
+        function hideLoadingAnimation() {
+            loadingAnimationContainer.style.display = 'none';
+            const messageInterval = loadingAnimationContainer.getAttribute('data-interval');
+            if (messageInterval) {
+                clearInterval(parseInt(messageInterval));
+            }
+        }
+    </script>
